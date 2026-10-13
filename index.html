@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="Loto Mobil - Number analysis, sub-arrays triage and reverse pairings system">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Loto Mobil</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2246%22 fill=%22%234f46e5%22/><circle cx=%2250%22 cy=%2250%22 r=%2226%22 fill=%22%23ffffff%22/><text y=%2258%22 x=%2250%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2226%22 font-weight=%22800%22 fill=%22%230f172a%22>8</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">Loto Mobil</h1>
+      <p class="subtitle">Enter your 2-digit numbers for Set M, Set S &amp; Set J</p>
+    </header>
+
+    <!-- Sets Wrapper -->
+    <main class="sets-wrapper">
+      <!-- Set M (3 inputs: M1, M2, M3) -->
+      <section class="set-card" aria-labelledby="set-m-heading">
+        <div class="set-header">
+          <span id="set-m-heading" class="set-pill pill-m">SET M</span>
+        </div>
+        <div class="inputs-row">
+          <div class="circle-input-container">
+            <input 
+              type="text" 
+              id="m1" 
+              class="circle-input" 
+              maxlength="2" 
+              inputmode="numeric" 
+              pattern="[0-9]*"
+              enterkeyhint="next"
+              placeholder="00" 
+              autocomplete="off"
+              aria-label="Input M1"
+            />
+            <span class="input-badge">M1</span>
+          </div>
+
+          <div class="circle-input-container">
+            <input 
+              type="text" 
+              id="m2" 
+              class="circle-input" 
+              maxlength="2" 
+              inputmode="numeric" 
+              pattern="[0-9]*"
+              enterkeyhint="next"
+              placeholder="00" 
+              autocomplete="off"
+              aria-label="Input M2"
+            />
+            <span class="input-badge">M2</span>
+          </div>
+
+          <div class="circle-input-container">
+            <input 
+              type="text" 
+              id="m3" 
+              class="circle-input" 
+              maxlength="2" 
+              inputmode="numeric" 
+              pattern="[0-9]*"
+              enterkeyhint="next"
+              placeholder="00" 
+              autocomplete="off"
+              aria-label="Input M3"
+            />
+            <span class="input-badge">M3</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Set S (3 inputs: S1, S2, S3) -->
+      <section class="set-card" aria-labelledby="set-s-heading">
+        <div class="set-header">
+          <span id="set-s-heading" class="set-pill pill-s">SET S</span>
+        </div>
+        <div class="inputs-row">
+          <div class="circle-input-container">
+            <input 
+              type="text" 
+              id="s1" 
+              class="circle-input" 
+              maxlength="2" 
+              inputmode="numeric" 
+              pattern="[0-9]*"
+              enterkeyhint="next"
+              placeholder="00" 
+              autocomplete="off"
+              aria-label="Input S1"
+            />
+            <span class="input-badge">S1</span>
+          </div>
+
+          <div class="circle-input-container">
+            <input 
+              type="text" 
+              id="s2" 
+              class="circle-input" 
+              maxlength="2" 
+              inputmode="numeric" 
+              pattern="[0-9]*"
+              enterkeyhint="next"
+              placeholder="00" 
+              autocomplete="off"
+              aria-label="Input S2"
+            />
+            <span class="input-badge">S2</span>
+          </div>
+
+          <div class="circle-input-container">
+            <input 
+              type="text" 
+              id="s3" 
+              class="circle-input" 
+              maxlength="2" 
+              inputmode="numeric" 
+              pattern="[0-9]*"
+              enterkeyhint="next"
+              placeholder="00" 
+              autocomplete="off"
+              aria-label="Input S3"
+            />
+            <span class="input-badge">S3</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Set J (2 inputs: J1, J2) -->
+      <section class="set-card" aria-labelledby="set-j-heading">
+        <div class="set-header">
+          <span id="set-j-heading" class="set-pill pill-j">SET J</span>
+        </div>
+        <div class="inputs-row">
+          <div class="circle-input-container">
+            <input 
+              type="text" 
+              id="j1" 
+              class="circle-input" 
+              maxlength="2" 
+              inputmode="numeric" 
+              pattern="[0-9]*"
+              enterkeyhint="next"
+              placeholder="00" 
+              autocomplete="off"
+              aria-label="Input J1"
+            />
+            <span class="input-badge">J1</span>
+          </div>
+
+          <div class="circle-input-container">
+            <input 
+              type="text" 
+              id="j2" 
+              class="circle-input" 
+              maxlength="2" 
+              inputmode="numeric" 
+              pattern="[0-9]*"
+              enterkeyhint="go"
+              placeholder="00" 
+              autocomplete="off"
+              aria-label="Input J2"
+            />
+            <span class="input-badge">J2</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Triage Button & Actions -->
+    <div class="action-wrapper">
+      <button type="button" id="triageBtn" class="triage-btn">
+        <span class="btn-text">Triage</span>
+      </button>
+      <button type="button" id="clearBtn" class="clear-btn" title="Clear all inputs">Clear</button>
+    </div>
+
+    <!-- Results Section (Boxes for each input) -->
+    <section id="results" class="results-container" aria-live="polite"></section>
+
+    <!-- Selected Reverse Button (appears below Triage results) -->
+    <div id="bottomActionWrapper" class="bottom-action-wrapper" style="display: none;">
+      <button type="button" id="selectedReverseBtn" class="selected-reverse-btn">
+        <span class="btn-text">Selected Reverse</span>
+      </button>
+    </div>
+
+    <!-- Selected Reverse Results Section -->
+    <section id="selectedReverseResults" class="selected-reverse-results-container" style="display: none;" aria-live="polite"></section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
