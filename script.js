@@ -152,7 +152,7 @@ function renderInputBox(badgeLabel, num, rev, matchedRows) {
 
 // Initialize on DOM load
 document.addEventListener("DOMContentLoaded", () => {
-  // All independent inputs across Set M (M1, M2, M3), Set S (S1, S2, S3), and Set J (J1, J2)
+  // All independent inputs across Set M (M1, M2, M3), Set S (S1, S2, S3), and Set J (J1, J2, J3)
   const inputConfigs = [
     { id: "m1", label: "M1" },
     { id: "m2", label: "M2" },
@@ -162,6 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
     { id: "s3", fallbackId: "s6", label: "S3" },
     { id: "j1", label: "J1" },
     { id: "j2", label: "J2" },
+    { id: "j3", label: "J3" },
   ];
 
   const inputs = inputConfigs.map((cfg) => {
@@ -394,6 +395,71 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
     } else {
+      // =========================================================================
+      // Multiple Reverses Analysis (Equality rule: 4545 = 5445 = 4554 = 5454)
+      // Tally reverse pairs that appear multiple times (>= 2) across comparisons
+      // =========================================================================
+      const reversePairMap = new Map();
+
+      for (let i = 0; i < currentBoxData.length; i++) {
+        const boxA = currentBoxData[i];
+
+        for (let j = i + 1; j < currentBoxData.length; j++) {
+          const boxB = currentBoxData[j];
+          const seenCanonicalInThisPair = new Set();
+
+          boxA.allNumbers.forEach((numA) => {
+            const revA = getReverseNumber(numA);
+            if (revA !== null && boxB.allNumbers.includes(revA)) {
+              const minN = Math.min(numA, revA);
+              const maxN = Math.max(numA, revA);
+              const s1 = formatTwoDigits(minN);
+              const s2 = formatTwoDigits(maxN);
+              const canonicalKey = `${s1}-${s2}`;
+
+              if (!reversePairMap.has(canonicalKey)) {
+                // All variations are equal representations of this reverse pair
+                const variations = minN === maxN
+                  ? [`${s1}${s1}`]
+                  : [`${s1}${s2}`, `${s2}${s1}`, `${s1}${s1}`, `${s2}${s2}`];
+
+                reversePairMap.set(canonicalKey, {
+                  num1: minN,
+                  num2: maxN,
+                  s1,
+                  s2,
+                  canonicalKey,
+                  allVariations: variations,
+                  occurrences: [],
+                });
+              }
+
+              const item = reversePairMap.get(canonicalKey);
+
+              // Count distinct box comparison where this reverse pair is found
+              if (!seenCanonicalInThisPair.has(canonicalKey)) {
+                seenCanonicalInThisPair.add(canonicalKey);
+                item.occurrences.push({
+                  boxA: `${boxA.label} (${formatTwoDigits(boxA.num)})`,
+                  boxB: `${boxB.label} (${formatTwoDigits(boxB.num)})`,
+                  matchedCombo: `${formatTwoDigits(numA)}${formatTwoDigits(revA)}`,
+                });
+              }
+            }
+          });
+        }
+      }
+
+      // Filter only those found multiple times (>= 2 times)
+      const multipleReverses = Array.from(reversePairMap.values())
+        .filter((item) => item.occurrences.length >= 2)
+        .sort((a, b) => {
+          if (b.occurrences.length !== a.occurrences.length) {
+            return b.occurrences.length - a.occurrences.length;
+          }
+          return a.num1 - b.num1;
+        });
+
       // Top showcase with large 4-digit combos
       const pillsHtml = uniqueCombos
         .map((combo) => `<div class="sr-combo-pill" aria-label="Combination ${combo}">${combo}</div>`)
@@ -430,11 +496,101 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .join("");
 
+      // Multiple Reverses HTML
+      const mrCardsHtml = multipleReverses.length === 0
+        ? `
+          <div class="mr-empty-card">
+            <p class="mr-empty-text">No reverse combinations were found multiple times across the box comparisons (all appeared only once).</p>
+          </div>
+        `
+        : `
+          <div class="mr-grid" id="mrGrid">
+            ${multipleReverses.map((item) => {
+              const count = item.occurrences.length;
+              const isHigh = count >= 3;
+              const variationsHtml = item.allVariations
+                .map((v) => `<span class="mr-combo-chip">${v}</span>`)
+                .join('<span class="mr-eq-sign">=</span>');
+
+              const occsHtml = item.occurrences
+                .map((occ) => `
+                  <div class="mr-occ-item">
+                    <span class="mr-occ-box">${occ.boxA}</span>
+                    <span class="mr-occ-arrow">⟷</span>
+                    <span class="mr-occ-box">${occ.boxB}</span>
+                  </div>
+                `)
+                .join("");
+
+              return `
+                <article class="mr-item-card ${isHigh ? 'is-high-frequency' : ''}" data-count="${count}">
+                  <div class="mr-item-top">
+                    <div class="mr-pair-balls">
+                      <div class="mr-ball">${item.s1}</div>
+                      <span class="mr-arrow-icon">⇄</span>
+                      <div class="mr-ball">${item.s2}</div>
+                    </div>
+                    <div class="mr-count-badge ${isHigh ? 'badge-high' : 'badge-regular'}">
+                      <span class="mr-count-num">${count}</span>
+                      <span class="mr-count-text">times</span>
+                    </div>
+                  </div>
+
+                  <div class="mr-equality-box">
+                    <div class="mr-equality-label">Equal Variations (=):</div>
+                    <div class="mr-equality-chips">
+                      ${variationsHtml}
+                    </div>
+                  </div>
+
+                  <div class="mr-found-section">
+                    <div class="mr-found-label">Found in ${count} comparisons:</div>
+                    <div class="mr-found-list">
+                      ${occsHtml}
+                    </div>
+                  </div>
+                </article>
+              `;
+            }).join("")}
+          </div>
+        `;
+
+      const mrSectionHtml = `
+        <div class="mr-card" id="multipleReversesCard">
+          <div class="mr-header">
+            <div class="mr-title-row">
+              <h3 class="mr-title">🔥 Multiple Reverses</h3>
+              <span class="mr-count-pill">${multipleReverses.length} Repeated</span>
+            </div>
+            <p class="mr-subtitle">Reverses found multiple times across box comparisons (${multipleReverses.length > 0 ? "4554 = 5445 = 4545 = 5454" : "e.g. 4554 = 5445 = 4545 = 5454"})</p>
+          </div>
+
+          ${multipleReverses.length > 0 ? `
+            <div class="mr-action-toolbar">
+              <button type="button" id="mrFilterAllBtn" class="mr-tool-btn active">All (${multipleReverses.length})</button>
+              ${multipleReverses.some(r => r.occurrences.length >= 3) ? `
+                <button type="button" id="mrFilterHighBtn" class="mr-tool-btn">Top Repeats (3+ times)</button>
+              ` : ''}
+              <button type="button" id="mrCopyBtn" class="mr-tool-btn">📋 Copy Summary</button>
+            </div>
+          ` : ''}
+
+          ${mrCardsHtml}
+        </div>
+      `;
+
       outputHtml = `
         <div class="sr-card">
           <div class="sr-header">
             <h3 class="sr-title">Selected Reverse Results</h3>
             <p class="sr-subtitle">${uniqueCombos.length} unique 4-digit reverse combinations found across boxes</p>
+            ${multipleReverses.length > 0 ? `
+              <div class="sr-quick-nav">
+                <button type="button" id="jumpToMrBtn" class="sr-quick-mr-btn">
+                  🔥 Jump to Multiple Reverses (${multipleReverses.length} Repeated)
+                </button>
+              </div>
+            ` : ''}
           </div>
 
           <div class="sr-combos-showcase">
@@ -445,11 +601,70 @@ document.addEventListener("DOMContentLoaded", () => {
             ${pairsHtml}
           </div>
         </div>
+
+        ${mrSectionHtml}
       `;
     }
 
     selectedReverseResults.innerHTML = outputHtml;
     selectedReverseResults.style.display = "flex";
+
+    // Bind interactive toolbar buttons
+    const jumpBtn = document.getElementById("jumpToMrBtn");
+    if (jumpBtn) {
+      jumpBtn.addEventListener("click", () => {
+        const mrCard = document.getElementById("multipleReversesCard");
+        if (mrCard) {
+          mrCard.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    }
+
+    const filterAllBtn = document.getElementById("mrFilterAllBtn");
+    const filterHighBtn = document.getElementById("mrFilterHighBtn");
+    const mrCards = selectedReverseResults.querySelectorAll(".mr-item-card");
+
+    if (filterAllBtn) {
+      filterAllBtn.addEventListener("click", () => {
+        filterAllBtn.classList.add("active");
+        if (filterHighBtn) filterHighBtn.classList.remove("active");
+        mrCards.forEach((c) => (c.style.display = "flex"));
+      });
+    }
+
+    if (filterHighBtn) {
+      filterHighBtn.addEventListener("click", () => {
+        filterHighBtn.classList.add("active");
+        if (filterAllBtn) filterAllBtn.classList.remove("active");
+        mrCards.forEach((c) => {
+          const cnt = parseInt(c.getAttribute("data-count"), 10);
+          c.style.display = cnt >= 3 ? "flex" : "none";
+        });
+      });
+    }
+
+    const copyBtn = document.getElementById("mrCopyBtn");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", () => {
+        const cardsData = Array.from(selectedReverseResults.querySelectorAll(".mr-item-card"));
+        const summaryLines = cardsData.map((c) => {
+          const pair = c.querySelector(".mr-pair-balls")?.innerText.replace(/\s+/g, " ") || "";
+          const count = c.querySelector(".mr-count-num")?.innerText || "";
+          return `${pair}: ${count} times`;
+        });
+        const summaryText = summaryLines.join("\n");
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(summaryText).then(() => {
+            const originalText = copyBtn.innerText;
+            copyBtn.innerText = "✓ Copied!";
+            setTimeout(() => {
+              copyBtn.innerText = originalText;
+            }, 2000);
+          });
+        }
+      });
+    }
+
     selectedReverseResults.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 

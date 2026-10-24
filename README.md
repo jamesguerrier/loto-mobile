@@ -10,10 +10,11 @@ A sleek, mobile-first web application for lottery numbers analysis, sub-arrays t
 - **Three Independent Input Sets**:
   - **Set M**: `M1`, `M2`, `M3`
   - **Set S**: `S1`, `S2`, `S3`
-  - **Set J**: `J1`, `J2`
+  - **Set J**: `J1`, `J2`, `J3`
 - **Smart Touch Input**: Automatic numeric keypad popup, 2-digit auto-advance, and keyboard dismissal on calculation.
 - **Triage Action**: Searches the internal dataset and renders matching sub-arrays and their reverse numbers in an integrated card format.
 - **Selected Reverse Engine**: Cross-compares numbers between separate input boxes and extracts matching 4-digit combinations (e.g., `0880`, `4224`).
+- **Multiple Reverses Analyzer**: Detects all reverses that appeared multiple times (>= 2 times) across box comparisons with canonical equality (`4545 = 5445 = 4554 = 5454`), displaying occurrence counts, equal variations, and comparison breakdowns.
 
 ---
 
